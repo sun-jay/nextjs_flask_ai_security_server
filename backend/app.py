@@ -1,11 +1,13 @@
 
 import mediapipe as mp
-from flask import Flask, Response
+from flask import Flask, Response, request
 import cv2
 import threading
 import base64
 from flask import Flask, send_file
 from flask_sse import sse
+from imutils.video import VideoStream
+import pandas as pd
 
 app = Flask(__name__)
 app.config['REDIS_URL'] = 'redis://localhost:6379'
@@ -35,7 +37,7 @@ def stream3():
 
 @app.route('/stream4', methods=['GET'])
 def stream4():
-    return Response(person_detect('rtsp://admin:admin@192.168.0.29:554'), mimetype="multipart/x-mixed-replace; boundary=frame")
+    return Response(gen_with_VideoStream('rtsp://admin:admin@192.168.0.29:554'), mimetype="multipart/x-mixed-replace; boundary=frame")
 
 
 @app.route('/test', methods=['GET'])
@@ -46,6 +48,30 @@ def test():
     }
     return response_body
 
+@app.route('/query',methods = ['POST', 'GET'])
+def query():
+    #read /saved_streams/times.csv
+    times_df = pd.read_csv('saved_streams/times.csv')
+    # start_time = request.json.get('start_time')
+    # find the file that has a time range that contains start_time
+    # and return the filename
+    # filename = times_df[(times_df['start_time'] <= start_time) & (times_df['end_time'] >= start_time)]['filename'].values[0]
+    # filename = 'Title@2022-10-23@02-29-38.mp4'
+    # return send_file(filename, as_attachment=True)
+    return send_file(f'output_video~1682558771.7636037~1682558781.7761862~0.mp4', as_attachment=True)
+
+# def query():
+#     if request.method == 'POST':
+#         #read /saved_streams/times.csv
+#         times_df = pd.read_csv('saved_streams\times.csv')
+#         start_time = request.json.get('start_time')
+#         # find the file that has a time range that contains start_time
+#         # and return the filename
+#         filename = times_df[(times_df['start_time'] <= start_time) & (times_df['end_time'] >= start_time)]['filename'].values[0]
+#         return send_file(f'saved_streams/output_video~1682558771.7636037~1682558781.7761862~0.mp4', as_attachment=True)
+#     else:
+#         return 'Method not allowed'
+    
 @app.route('/video')
 def video():
     filename = 'Title@2022-10-23@02-29-38.mp4'
@@ -55,7 +81,6 @@ def video():
 
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
-
 
 def person_detect(url):
     # grab global references to the lock variable
@@ -105,6 +130,17 @@ def person_detect(url):
     # release the camera
     vc.release()
 
+def gen_with_VideoStream(url):
+    vc = VideoStream(url).start()
+    while True:
+        frame = vc.read()
+        if frame is None:
+            continue
+        # Encode the frame as a binary JPEG image
+        frame = cv2.imencode('.jpg', frame)[1].tobytes()
+        # yield the output frame in the byte format
+        yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(frame) + b'\r\n')
+
 def generate(url):
     # grab global references to the lock variable
     global lock
@@ -147,7 +183,7 @@ def generate_video():
             break
         # Encode the frame as a binary JPEG image
         frame = cv2.imencode('.jpg', frame)[1].tobytes()
-        # Send the frame as a binary SSE event
+        # Send the frame as a binary `SSE` event
         yield f'data: {frame}\n\n'
 
 if __name__ == '__main__':

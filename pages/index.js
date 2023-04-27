@@ -1,48 +1,36 @@
-import { useEffect, useState } from "react"
-import ReactPlayer from 'react-player';
+import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic'
+const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
 
+function VideoPlayer() {
+  // const [videoUrl, setVideoUrl] = useState('');
+  // const [timeValue, setTimeValue] = useState(0);
 
-export default function Home() {
-  const [data, setData] = useState({})
+  // const handleTimeInputChange = (event) => {
+  //   setTimeValue(event.target.value);
+  // }
 
-  async function get() {
-    const info = await fetch('/api/hello', {
-      method: 'GET',
-    }).then(res => res.json())
-    setData(info)
-    return info
-  }
+  // const fetchVideoFromQuery = (time) => {
+  //   const url = `/query?time=${time}`;
+  //   fetch(url)
+  //     .then(response => response.json())
+  //     .then(data => {
+  //       setVideoUrl(data.videoUrl);
+  //     });
+  // }
 
-  useEffect(() => {
-    get()
-  }, [])
+  // useEffect(() => {
+  //   fetchVideoFromQuery(timeValue);
+  // }, [timeValue]);
 
   return (
-    <div>
-        <div class="h-screen w-screen"> 
-          <ReactPlayer
-            url='http://127.0.0.1:5000/video'
-            className='react-player'
-            width='100%'
-            height='100%'
-            playing={true}
-            controls={true}
-          />
-        </div>
-
-
-      {/* <img src='http://127.0.0.1:5000/stream4' className="w-12/12 border " alt="logo" /> */}
-
-      {/* <div class="flex w-full h-full">
-        <div class="flex flex-col w-6/12 h-full">
-          <img src='http://127.0.0.1:5000/stream1' className="w-12/12 border " alt="logo" />
-          <img src='http://127.0.0.1:5000/stream2' className="w-12/12 border " alt="logo" />
-        </div>
-        <div class="flex flex-col w-6/12 h-full">
-          <img src='http://127.0.0.1:5000/stream3' className="w-12/12 border " alt="logo" />
-          <img src='http://127.0.0.1:5000/stream4' className="w-12/12 border " alt="logo" />
-        </div>
-      </div> */}
-    </div>
-  )
+    // <div>
+    //   <video src={videoUrl} controls />
+    //   <input type="number" value={timeValue} onChange={handleTimeInputChange} />
+    // </div>
+    <ReactPlayer url= 'http://127.0.0.1:5000/query'
+    controls />
+  );
 }
+
+export default VideoPlayer;
