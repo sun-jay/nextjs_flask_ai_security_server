@@ -8,6 +8,7 @@ from flask import Flask, send_file
 from flask_sse import sse
 from imutils.video import VideoStream
 import pandas as pd
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.config['REDIS_URL'] = 'redis://localhost:6379'
@@ -48,18 +49,21 @@ def test():
     }
     return response_body
 
-@app.route('/query',methods = ['POST', 'GET'])
+@app.route('/query')
 def query():
-    #read /saved_streams/times.csv
-    times_df = pd.read_csv('saved_streams/times.csv')
-    # start_time = request.json.get('start_time')
-    # find the file that has a time range that contains start_time
-    # and return the filename
-    # filename = times_df[(times_df['start_time'] <= start_time) & (times_df['end_time'] >= start_time)]['filename'].values[0]
-    # filename = 'Title@2022-10-23@02-29-38.mp4'
-    # return send_file(filename, as_attachment=True)
-    return send_file(f'output_video~1682558771.7636037~1682558781.7761862~0.mp4', as_attachment=True)
+    times = pd.read_csv('saved_streams/times.csv')
+    this_many_secs_ago = request.args.get('start')
+    
+    time_ago = datetime.now() - timedelta(seconds=int(this_many_secs_ago))
 
+    filtered_df = times[(times['start_time'] <= time_ago.timestamp()) & (times['end_time'] >= time_ago.timestamp())]
+
+    filenames = filtered_df['filename'].tolist()
+    if len(filenames) == 0:
+        return 'No file found'
+    return send_file(filenames[0], as_attachment=True)
+    
+        
 # def query():
 #     if request.method == 'POST':
 #         #read /saved_streams/times.csv
@@ -74,7 +78,7 @@ def query():
     
 @app.route('/video')
 def video():
-    filename = 'Title@2022-10-23@02-29-38.mp4'
+    filename = 'first.mp4'
     return send_file(filename, as_attachment=True)
 
 

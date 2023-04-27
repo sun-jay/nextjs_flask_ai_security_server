@@ -6,11 +6,12 @@ import pandas as pd
 cap = cv2.VideoCapture(0)
 
 # initialize video writer object and other variables
-file_duration_secs = 10  # 10 seconds in this example
+file_duration_secs = 30 # 30 seconds
 file_counter = 0
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-out = cv2.VideoWriter('output.mp4', fourcc, 25.0, (640, 480))
-
+fourcc = cv2.VideoWriter_fourcc(*'H264')
+width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+out = out = cv2.VideoWriter("first.mp4", fourcc, 30.0, (width, height))
 # open times.csv with pandas
 times_df = pd.read_csv('saved_streams/times.csv')
 
@@ -25,13 +26,13 @@ while True:
     # check if it's time to start a new file
     if time.time() - start_time > file_duration_secs:
         # release previous video writer object, if any
-        if out is not None:
+        if out !=  None:
             out.release()
         # create new video writer object for new file
         filename = f'saved_streams/output_video~{start_time}~{time.time()}~{file_counter}.mp4'
-        out = cv2.VideoWriter(filename, fourcc, 20.0, (640, 480))
+        out = cv2.VideoWriter(filename, fourcc, 30.0, (width, height))
         file_counter += 1
-        # update times.csv
+        # update times.csv 
         times_df = times_df.append({'start_time': start_time, 'end_time': time.time(), 'filename': filename}, ignore_index=True)
         times_df.to_csv('saved_streams/times.csv', index=False)
         # reset start_time
