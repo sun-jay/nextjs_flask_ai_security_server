@@ -28,8 +28,8 @@ function Index() {
 
   const [videoData, setVideoData] = useState(null);
   const [videoUrl, setVideoUrl] = useState(null);
-  const [time_to_buffer, setTime_to_buffer] = useState(null);
   const [error, setError] = useState(null);
+  const [vidTime, setVidTime] = useState(null);
 
   useEffect(() => {
     if (Time) {
@@ -42,9 +42,12 @@ function Index() {
           if (!response.ok) {
             setError("No file found.");
             throw new Error('No file found');
+          }else{
+            setError(null);
           }
           // gets the start time of the video, truancates the decimal
           const vidStart = (response.headers.get('Content-Disposition').split('~')[1].split('.')[0])
+          setVidTime(vidStart)
           setTime_to_buffer(Time - vidStart)
           return response.blob();
         })
@@ -96,14 +99,20 @@ function Index() {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isReady, setIsReady] = useState(false);
   const playerRef = useRef(null);
+  const [time_to_buffer, setTime_to_buffer] = useState(null);
+  const [hasBuffered, setHasBuffered] = useState(false);
 
   useEffect(() => {
     console.log(playerRef)
     console.log(isReady)
-    if (isReady && playerRef.current) {
+    if (isReady && playerRef.current && !hasBuffered) {
       playerRef.current.seekTo(time_to_buffer, 'seconds');
+      setHasBuffered(true);
     }
+    
   }, [isReady]);
+
+  
 
   return (
     <AnimatePresence>
@@ -122,7 +131,7 @@ function Index() {
           onKeyDown={handleKeyDown}
         /> */}
         <button
-          className='m-16 border border-white'
+          className='m-4 border border-white'
           onClick={handleSubmit}
         >Submit</button>
         {error &&
@@ -148,6 +157,7 @@ function Index() {
               playerRef={playerRef}
               videoUrl={videoUrl}
               setIsReady={setIsReady}
+              vidTime={vidTime}
             />
           </motion.div>
         }
