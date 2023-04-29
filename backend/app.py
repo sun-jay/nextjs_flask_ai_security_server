@@ -9,11 +9,14 @@ from flask_sse import sse
 from imutils.video import VideoStream
 import pandas as pd
 from datetime import datetime, timedelta
+import sys
+from flask_cors import CORS
+
 
 app = Flask(__name__)
 app.config['REDIS_URL'] = 'redis://localhost:6379'
 app.register_blueprint(sse, url_prefix='/stream')
-
+CORS(app)
 
 # initialize a lock used to ensure thread-safe
 # exchanges of the frames (useful for multiple browsers/tabs
@@ -52,16 +55,23 @@ def test():
 @app.route('/query')
 def query():
     times = pd.read_csv('saved_streams/times.csv')
-    this_many_secs_ago = request.args.get('start')
+    unix_timestamp = request.args.get('time')
+    print(unix_timestamp, file=sys.stderr)
     
-    time_ago = datetime.now() - timedelta(seconds=int(this_many_secs_ago))
-
-    filtered_df = times[(times['start_time'] <= time_ago.timestamp()) & (times['end_time'] >= time_ago.timestamp())]
+    # filter the dataframe to only include rows that have a start_time
+    # that is less than the unix_timestamp and an end_time that is greater
+    # than the unix_timestamp
+    filtered_df = times[(times['start_time'] <= float(unix_timestamp)) & (times['end_time'] >= float(unix_timestamp))]
 
     filenames = filtered_df['filename'].tolist()
     if len(filenames) == 0:
-        return 'No file found'
-    return send_file(filenames[0], as_attachment=True)
+        # return an response with a 404 error code
+        return Response(status=404)
+    response = send_file(filenames[0], as_attachment=True)
+    response.headers['Content-Disposition'] = filenames[0]
+    print(filenames[0], file=sys.stderr)
+    response.headers['Access-Control-Expose-Headers'] = 'Content-Disposition'
+    return response
     
         
 # def query():

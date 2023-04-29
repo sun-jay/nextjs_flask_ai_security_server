@@ -1,29 +1,134 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import dynamic from 'next/dynamic'
 const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
 import { motion, LayoutGroup, AnimatePresence } from "framer-motion";
+import DateTime from "react-datetime";
+import "react-datetime/css/react-datetime.css";
+import VideoPlayer from "../components/VideoPlayer";
 
-function VideoPlayer() {
+function Index() {
   const [input, setInput] = useState('');
-  const [curStart, setCurStart] = useState('');
+  const [Time, setTime] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
+
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+  };
 
   function handleKeyDown(event) {
     if (event.keyCode === 13) {
       setCurStart(input);
     }
   }
+  function handleSubmit() {
+    const unixTimestamp = Date.parse(selectedDate._d) / 1000
+    console.log(unixTimestamp);
+    setTime(unixTimestamp);
+  }
+
+  const [videoData, setVideoData] = useState(null);
+  const [videoUrl, setVideoUrl] = useState(null);
+  const [time_to_buffer, setTime_to_buffer] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (Time) {
+      // if err, log no file found
+      fetch(`http://127.0.0.1:5000/query?time=${Time}`, 
+      // {mode: "cors"}
+      )
+        .then(response => {
+          // if res is ok, get the start time of the video and the blob, else, log no file found
+          if (!response.ok) {
+            setError("No file found.");
+            throw new Error('No file found');
+          }
+          // gets the start time of the video, truancates the decimal
+          const vidStart = (response.headers.get('Content-Disposition').split('~')[1].split('.')[0])
+          setTime_to_buffer(Time - vidStart)
+          return response.blob();
+        })
+        .then(data => {
+          setVideoData(data);
+        })
+        .catch(err => {
+          console.log(err);
+        })
+    }
+  }, [Time]);
+
+  useEffect(() => {
+    setVideoUrl(videoData ? URL.createObjectURL(videoData) : '')
+  }, [videoData]);
+
+
+
+  // const [error, setError] = useState(null);
+
+  // const handleQuery = async (timestamp) => {
+  //   try {
+  //     const response = await fetch(`/api/query?time=${timestamp}`);
+
+  //     if (response.ok) {
+  //       const stream = response.body;
+  //       const blob = new Blob([stream], { type: 'video/mp4' });
+  //       const url = URL.createObjectURL(blob);
+  //       setVideoUrl(url);
+  //       setError(null);
+  //     } else {
+  //       setVideoUrl(null);
+  //       setError("No file found.");
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //     setVideoUrl(null);
+  //     setError("An error occurred while querying the API.");
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   if (Time) {
+  //     handleQuery(Time);
+  //   }
+  // }, [Time]);
+
+
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [isReady, setIsReady] = useState(false);
+  const playerRef = useRef(null);
+
+  useEffect(() => {
+    console.log(playerRef)
+    console.log(isReady)
+    if (isReady && playerRef.current) {
+      playerRef.current.seekTo(time_to_buffer, 'seconds');
+    }
+  }, [isReady]);
 
   return (
     <AnimatePresence>
       <div className='text-black bg-gray-600 w-screen h-screen flex flex-col items-center justify-center'>
+        <DateTime onChange={handleDateChange} />
+        <p>Selected date: {String(selectedDate)}</p>
+        Time: {Time}
+
+        VideoUrl : {videoUrl}
+        Time to buffer: {time_to_buffer}
         <h1 className='text-4xl font-bold'>Enter your time</h1>
-        <input
+        {/* <input
           className='m-16'
           type="text"
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-        />
-        {curStart != '' &&
+        /> */}
+        <button
+          className='m-16 border border-white'
+          onClick={handleSubmit}
+        >Submit</button>
+        {error &&
+          <p className='text-red-500'>{error}</p>
+        }
+        {videoUrl &&
           <motion.div
             transition={{ duration: 0.5 }}
             initial={{ y: "100%" }}
@@ -31,9 +136,18 @@ function VideoPlayer() {
             exit={{ y: "100%" }}
             className=''
           >
-            <ReactPlayer url={`http://127.0.0.1:5000/query?start=${curStart}`}
+            {/* <ReactPlayer url={videoUrl}
+              ref={playerRef}
+              width='75%'
+              height='75%'
               controls
-              playing
+              onReady={() => setIsReady(true)}
+              /> */}
+
+            <VideoPlayer
+              playerRef={playerRef}
+              videoUrl={videoUrl}
+              setIsReady={setIsReady}
             />
           </motion.div>
         }
@@ -42,4 +156,4 @@ function VideoPlayer() {
   );
 }
 
-export default VideoPlayer;
+export default Index;
