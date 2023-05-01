@@ -25,9 +25,13 @@ for start,end,f in times_list:
 
 
 # %%
-import cv2
+import os
+# delete all files in ../backend/saved_streams exepct times.csv
+for f in os.listdir('../backend/saved_streams'):
+    if f != 'times.csv':
+        os.remove(f'../backend/saved_streams/{f}')
+# reset times.csv to empty dataframe with columns: start_time, end_time, filename
+times_df = pd.DataFrame(columns=['start_time', 'end_time', 'filename'])
+times_df.to_csv('../backend/saved_streams/times.csv', index=False)
 
-build_info = cv2.getBuildInformation()
-
-print(build_info)
 
