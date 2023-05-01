@@ -32,21 +32,21 @@ export default function VideoPlayer({ playerRef, videoUrl, setIsReady, vidTime }
     width: '75%',
     height: '75%',
     onReady: () => setIsReady(true),
-    config: {
-      file: {
-        attributes: {
-          controlsList: 'nodownload', // Hide the download button
-        },
-      },
-    },
-    // light: true, // Hide the poster image
-    config: {
-      file: {
-        attributes: {
-          controlsList: 'nodownload', // Hide the download button
-        },
-      },
-    },
+    // config: {
+    //   file: {
+    //     attributes: {
+    //       controlsList: 'nodownload', // Hide the download button
+    //     },
+    //   },
+    // },
+    // // light: true, // Hide the poster image
+    // config: {
+    //   file: {
+    //     attributes: {
+    //       controlsList: 'nodownload', // Hide the download button
+    //     },
+    //   },
+    // },
     // style: {
     //   pointerEvents: 'none', // Disable seeking and volume controls
     // },

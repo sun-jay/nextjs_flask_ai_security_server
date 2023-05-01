@@ -38,6 +38,7 @@ function Index() {
       // {mode: "cors"}
       )
         .then(response => {
+          console.log('res is back')     
           // if res is ok, get the start time of the video and the blob, else, log no file found
           if (!response.ok) {
             setError("No file found.");
@@ -52,7 +53,9 @@ function Index() {
           return response.blob();
         })
         .then(data => {
+          console.log('blob is formed') 
           setVideoData(data);
+          console.log('video data is set')
         })
         .catch(err => {
           console.log(err);
@@ -106,8 +109,10 @@ function Index() {
     console.log(playerRef)
     console.log(isReady)
     if (isReady && playerRef.current && !hasBuffered) {
+      console.log(' buffering')
       playerRef.current.seekTo(time_to_buffer, 'seconds');
       setHasBuffered(true);
+      console.log('buffered')
     }
     
   }, [isReady]);
