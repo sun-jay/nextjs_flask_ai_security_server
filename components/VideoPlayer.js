@@ -14,7 +14,8 @@ export default function VideoPlayer({ playerRef, videoUrl, setIsReady, vidTime }
 
   const getAbsoluteTime = (timeInSeconds) => {
     const unix_timestamp_start_of_video = Number(vidTime)
-    const totalSeconds = timeInSeconds + (unix_timestamp_start_of_video)
+    // IMPORTANT we subtract 3 seconds to account for the 3 seconds that we added in the request to account for latency
+    const totalSeconds = timeInSeconds + (unix_timestamp_start_of_video) -3
     const date = new Date(totalSeconds * 1000);
     const formattedTime = date.toLocaleString();
     return formattedTime;
