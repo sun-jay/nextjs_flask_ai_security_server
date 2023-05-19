@@ -12,14 +12,14 @@ function Index() {
   const [selectedDate, setSelectedDate] = useState(null);
 
   const handleDateChange = (date) => {
-    setSelectedDate(date);
+    setSelectedDate(date._d);
   };
 
   // handle submit changes time, which calls time useEffect
   // we get the date from the datetime picker, which sets the selectedDate state on change
   // we get the unix timestamp from the selectedDate state
   function handleSubmit() {
-    const unixTimestamp = Date.parse(selectedDate._d) / 1000
+    const unixTimestamp = Date.parse(selectedDate) / 1000
     console.log(unixTimestamp);
     // IMPORTANT: we add 3 seconds to account for latency the saved streams(maybe this would have been smarter to account for
     // on the server side, but this is a quick fix)
@@ -75,13 +75,10 @@ function Index() {
     }
   }, [Time]);
 
+  // videoData useEffect
   useEffect(() => {
     setVideoUrl(videoData ? URL.createObjectURL(videoData) : '')
   }, [videoData]);
-
-
-
-
 
   const [isPlaying, setIsPlaying] = useState(true);
   const [isReady, setIsReady] = useState(false);
@@ -89,7 +86,7 @@ function Index() {
   const [time_to_buffer, setTime_to_buffer] = useState(null);
   const [hasBuffered, setHasBuffered] = useState(false);
 
-  // buffer the video to time_to_buffer
+  // buffer the video to time_to_buffer when the video is ready
   useEffect(() => {
     if (isReady && !hasBuffered) {
       console.log('buffering')
@@ -99,7 +96,7 @@ function Index() {
   }, [isReady, hasBuffered, time_to_buffer]);
 
   const [events, setEvents] = useState([])
-
+  // fetch events on page load
   useEffect(() => {
     fetch(`http://192.168.1.101:5000/events`, 
       // {mode: "cors"}
@@ -143,10 +140,16 @@ function Index() {
             {JSON.stringify(events) != '[]'? events.map(event => (
 
               <button className="flex flex-row items-center justify-center border-2 border-black rounded-lg m-2 p-2"
-              onClick={() => setTime(event.time)}>
+              onClick={() => {
+                setTime(event.time)
+                setSelectedDate(new Date())
+              }}
+              key={event.time}
+              >
                 <div>
                   <p>{event.event}</p>
                   <p>{unix_timestamp_to_12hr(event.time)}</p>
+                  <p>Duration: {Math.round(event.duration)}</p>
                 </div>
               </button>
 
@@ -156,7 +159,12 @@ function Index() {
           </div>
           
           <div className='flex flex-col items-center justify-center'>
-            <DateTime onChange={handleDateChange} />
+            <DateTime onChange={handleDateChange} value={selectedDate} />
+            <button
+              className='m-4 border border-white'
+              onClick={() => setSelectedDate(new Date())
+              }
+            >Use current time</button>
             <p>Selected date: {String(selectedDate)}</p>
             {/* Time: {Time}
             Events: {JSON.stringify(events)}
