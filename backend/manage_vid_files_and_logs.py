@@ -78,6 +78,7 @@ def convert_logs_to_events():
     # save logs_df
     events_df.to_csv('events.csv', index=False)
 # %%
+
 # this is not the most efficient way to do this, but it works
 # the corrent way to do this would be to leverage the sorted nature of times.csv and events.csv,
 # and utilize binary search to query both times_df and events_df rather than iterating through them
@@ -87,14 +88,17 @@ def del_old_vids():
     events = pd.read_csv('events.csv')
 
     # we want to select videos that start within 24 hours and/or are within 5 minutes of an event, and delete the rest
-    for row in times_df:
-        start_time = row['start_time']
-        end_time = row['end_time']
-        filename = row['filename']
+    for row in times_df.itertuples():
+        start_time = row.start_time
+        filename = row.filename
+        # if row.end_time is not None:
+        #     end_time = row.end_time
+        # else:
+        #     end_time = time.time()
 
         # if the video is within 24 hours of now, or within 5 minutes of an event, we keep it
-        for event in events:
-            event_time = event['time']
+        for event in events.itertuples():
+            event_time = event.time
             if event_time - 300 <= start_time <= event_time + 300:
                 break
         else:
@@ -104,9 +108,9 @@ def del_old_vids():
                 continue
             else:
                 # if this code is reached, the video is not within 24 hours of now, and not within 5 minutes of an event
+                print(f'Deleting {filename}...')
                 os.remove(f'saved_streams/{filename}')
                 # manage_video_files() will be called in the main loop, so we don't need to update times.csv here
-    
 # %%
 
 

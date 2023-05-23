@@ -15,7 +15,7 @@ export default function VideoPlayer({ playerRef, videoUrl, setIsReady, vidTime }
   const getAbsoluteTime = (timeInSeconds) => {
     const unix_timestamp_start_of_video = Number(vidTime)
     // IMPORTANT we subtract 3 seconds to account for the 3 seconds that we added in the request to account for latency
-    const totalSeconds = timeInSeconds + (unix_timestamp_start_of_video) -3
+    const totalSeconds = timeInSeconds + (unix_timestamp_start_of_video) 
     const date = new Date(totalSeconds * 1000);
     const formattedTime = date.toLocaleString();
     return formattedTime;
@@ -30,8 +30,8 @@ export default function VideoPlayer({ playerRef, videoUrl, setIsReady, vidTime }
     ref: playerRef,
     url: videoUrl,
     controls: true,
-    width: '75%',
-    height: '75%',
+    width: '100%',
+    height: '100%',
     onReady: () => setIsReady(true),
     // config: {
     //   file: {
@@ -56,7 +56,7 @@ export default function VideoPlayer({ playerRef, videoUrl, setIsReady, vidTime }
   return (
     <>
       <ReactPlayer {...playerProps} onProgress={handleProgress} />
-      <div>
+      <div className="text-white">
         {getAbsoluteTime(currentTime)}
       </div>
     </>

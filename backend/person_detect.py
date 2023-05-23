@@ -18,13 +18,13 @@ def detect_pose():
     # Check if the VideoCapture object was successfully initialized
     if not cap.isOpened():
         print("Failed to open the RTSP stream.")
-        return "err"
+        return None
     # Read one frame from the stream
     ret, frame = cap.read()
     # Check if the frame was successfully read
     if not ret:
         print("Failed to grab frame from the stream.")
-        return "err"
+        return None
     # resize the frame to fit the screen
     # frame = cv2.resize(frame, ((int(1920*(2/3)), int(1080*(2/3)))))
     # Load the grabbed image
@@ -86,7 +86,8 @@ while True:
     events = pd.read_csv('events.csv')
     # the only time any code is executed in this loop is when the buffer is empty, or when there is a person detected
     if buffer:
-        if detect_pose() != None:
+
+        if detect_pose() != None :
             buffer.append({'time': time.time(), 'person': 1})
         else:
             buffer.append({'time': time.time(), 'person': 0})
